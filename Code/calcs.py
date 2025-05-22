@@ -28,18 +28,22 @@ def oscilationFreq(df: pd.DataFrame):
     T = period(df)
     return(1/T)
 
-#Cálculos para pequeñas oscilaciones
+#Cálculos para pequeñas oscilaciones (Small Oscilations SO)
 
-def periodSmallOscilation(df: pd.DataFrame):
-    ''' T = ω / 2π'''
-
-    w = angularFreqSmallOscilation(df)
-    return w / (2*np.pi)
-
-def angularFreqSmallOscilation(df: pd.DataFrame):
+def angularFreqSO(df: pd.DataFrame):
     ''' ω = sqrt( g / l )'''
     l = np.mean(df["r"])
     return np.sqrt(constants.g / l)
+
+def periodSO(df: pd.DataFrame):
+    ''' T = ω / 2π'''
+    w = angularFreqSO(df)
+    return w / (2*np.pi)
+
+def oscilationFreqSO(df: pd.DataFrame):
+    ''' f = 2π / ω'''
+    w = angularFreqSO(df)
+    return (2*np.pi) / w
 
 ####################################################################################################################
 
@@ -49,7 +53,6 @@ def main():
     print(angularFreq(DF[0]))
     print(oscilationFreq(DF[0]))
 
-    print("....", oscilationFreq(DF[0]) * 2 * np.pi)
 
 if __name__ == "__main__":
     main()
