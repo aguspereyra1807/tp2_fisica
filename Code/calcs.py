@@ -5,7 +5,7 @@ from scipy import signal, constants
 # Read CSVs
 DF = [pd.read_csv(f'../Data/{i}.csv') for i in range(1,19)]
 
-# Calculos generales
+############################## Calculos generales #############################
 
 def period(df: pd.DataFrame):
     ''' T = t[θmax2] - t[θmax1] '''
@@ -28,7 +28,7 @@ def oscilationFreq(df: pd.DataFrame):
     T = period(df)
     return(1/T)
 
-#Cálculos para pequeñas oscilaciones (Small Oscilations SO)
+########## Cálculos para pequeñas oscilaciones (Small Oscilations SO) ##########
 
 def angularFreqSO(df: pd.DataFrame):
     ''' ω = sqrt( g / l )'''
@@ -44,15 +44,3 @@ def oscilationFreqSO(df: pd.DataFrame):
     ''' f = 2π / ω'''
     w = angularFreqSO(df)
     return (2*np.pi) / w
-
-####################################################################################################################
-
-def main():
-    print(DF[0])
-    print(period(DF[0]))
-    print(angularFreq(DF[0]))
-    print(oscilationFreq(DF[0]))
-
-
-if __name__ == "__main__":
-    main()
