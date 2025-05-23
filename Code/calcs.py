@@ -3,7 +3,13 @@ import numpy as np
 from scipy import signal, constants
 
 # Read CSVs
-DF = [pd.read_csv(f'../Data/{i}.csv') for i in range(1,19)]
+DF = []
+for i in range(1,19):
+    with open(f'../Data/{i}.csv', encoding='utf-8') as f:
+        m = float(f.readline().strip().split('=')[1])
+    df = pd.read_csv(f'../Data/{i}.csv', skiprows=1)
+    df.m = m
+    DF.append(df)
 
 ############################## Calculos generales #############################
 
@@ -12,21 +18,19 @@ def period(df: pd.DataFrame):
 
     maxs, _ = signal.find_peaks(df["θ"]) # Encuentra picos del ángulo encuentro 2 θmax
     periods = []
-    for i in range(len(maxs)-2):
+    for i in range(len(maxs)-1):
         t1 = df["t"].iloc[maxs[i+1]]
         t0 = df["t"].iloc[maxs[i]]
         periods.append(t1-t0)  
-    return(np.mean(periods))
+    return np.mean(periods)
 
-def angularFreq(df: pd.DataFrame):
+def angularFreq(df: pd.DataFrame, t: float):
     ''' ω = 2π / T '''
-    T = period(df)
-    return((2*np.pi) / T)
+    return (2*np.pi) / t
 
-def oscilationFreq(df: pd.DataFrame):
+def oscilationFreq(df: pd.DataFrame, t: float):
     ''' f = 1 / T '''
-    T = period(df)
-    return(1/T)
+    return 1/t
 
 ########## Cálculos para pequeñas oscilaciones (Small Oscilations SO) ##########
 
@@ -44,3 +48,13 @@ def oscilationFreqSO(df: pd.DataFrame):
     ''' f = 2π / ω'''
     w = angularFreqSO(df)
     return (2*np.pi) / w
+
+############### Cargo valores T, ω, f
+
+for df in DF:
+        df.period = period(df)
+        df.w = angularFreq(df, df.period)
+        df.f = oscilationFreq(df, df.period)
+
+if __name__ == '__main__':
+    pass
