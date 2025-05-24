@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from calcs import DF, angularFreq, oscilationFreq, radius
+from calcs import DF, DF_2, angularFreq, oscilationFreq, radius
 
 # DF por masas
 m1 = [df for df in DF if df.m == 6.07]
@@ -45,3 +45,26 @@ def AngleVsAngular():
     plt.savefig("../Graphs/AngleVsAngularFreq.png", bbox_inches='tight')
 
 ##### [2]
+
+##### misma masa, mismo angulo pero distinto largo 
+
+def Different_lenght():
+    
+    w_exp = [df.w for df in DF]
+    l_values = [radius(df) for df in DF]  # l es el promedio de r en cada experimento
+
+
+    plt.figure(figsize=(8,5))
+    plt.plot(l_values, w_exp, 'o', label='ω experimental')
+
+    plt.xlabel('Longitud del péndulo (m)')
+    plt.ylabel('Frecuencia angular ω (rad/s)')
+    plt.title('Frecuencia angular vs Longitud del péndulo')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
+
+
+    

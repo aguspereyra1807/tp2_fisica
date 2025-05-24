@@ -11,6 +11,14 @@ for i in range(1,19):
     df.m = m
     DF.append(df)
 
+DF_2 = []
+for i in range(19,22):
+    with open(f'../Data/{i}.csv', encoding='utf-8') as f:
+        m = float(f.readline().strip().split('=')[1])
+    df = pd.read_csv(f'../Data/{i}.csv', skiprows=1)
+    df.m = m
+    DF.append(df)
+
 ############################## Calculos generales #############################
 
 def period(df: pd.DataFrame):
@@ -60,6 +68,11 @@ def oscilationFreqSO(df: pd.DataFrame):
 ############### Cargo valores T, ω, f
 
 for df in DF:
+        df.period = period(df)
+        df.w = angularFreq(df, df.period)
+        df.f = oscilationFreq(df, df.period)
+
+for df2 in DF_2:
         df.period = period(df)
         df.w = angularFreq(df, df.period)
         df.f = oscilationFreq(df, df.period)
