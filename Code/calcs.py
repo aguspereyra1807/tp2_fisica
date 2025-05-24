@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy import signal, constants
 
-# Read CSVs
+# Cargar DataFrames
 DF = []
 for i in range(1,19):
     with open(f'../Data/{i}.csv', encoding='utf-8') as f:
@@ -11,13 +11,13 @@ for i in range(1,19):
     df.m = m
     DF.append(df)
 
-DF_2 = []
+DF2 = []
 for i in range(19,22):
     with open(f'../Data/{i}.csv', encoding='utf-8') as f:
         m = float(f.readline().strip().split('=')[1])
     df = pd.read_csv(f'../Data/{i}.csv', skiprows=1)
     df.m = m
-    DF.append(df)
+    DF2.append(df)
 
 ############################## Calculos generales #############################
 
@@ -72,10 +72,10 @@ for df in DF:
         df.w = angularFreq(df, df.period)
         df.f = oscilationFreq(df, df.period)
 
-for df2 in DF_2:
-        df.period = period(df)
-        df.w = angularFreq(df, df.period)
-        df.f = oscilationFreq(df, df.period)
+for df2 in DF2:
+        df2.period = period(df2)
+        df2.w = angularFreq(df2, df2.period)
+        df2.f = oscilationFreq(df2, df2.period)
 
 if __name__ == '__main__':
     pass
