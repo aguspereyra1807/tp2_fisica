@@ -1,79 +1,47 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import signal, constants
+from calcs import DF, angularFreq, oscilationFreq, radius
 
-# Cargar todos los datos
-DF = []
-for i in range(1, 19):
-    with open(f'../Data/{i}.csv', encoding='utf-8') as f:
-        m = float(f.readline().strip().split('=')[1])  # Masa desde primera línea
-    df = pd.read_csv(f'../Data/{i}.csv', skiprows=1)   # Datos: t, θ, r
-    df['m'] = m
-    df['id'] = i
-    DF.append(df)
+# DF por masas
+m1 = [df for df in DF if df.m == 6.07]
+m2 = [df for df in DF if df.m == 22.15]
+m3 = [df for df in DF if df.m == 72.36]
+dfM = [m1,m2,m3]
 
-# Funciones de análisis
-def period(df: pd.DataFrame):
-    '''Calcula el período a partir de dos máximos consecutivos de θ'''
-    maxs, _ = signal.find_peaks(df["θ"])
-    periods = []
-    for i in range(len(maxs)-1):
-        t1 = df["t"].iloc[maxs[i+1]]
-        t0 = df["t"].iloc[maxs[i]]
-        periods.append(t1 - t0)
-    return np.mean(periods)
+#### [1] (Información general)
+##### ω en función de θ inicial
 
-def angularFreq(T: float):
-    return (2 * np.pi) / T
+def AngleVsAngular():
+    plt.figure(figsize=(12,8))
 
-# Extraer características de cada experimento
-summary = []
-for df in DF:
-    T = period(df)
-    w = angularFreq(T)
-    l = np.mean(df["r"])
-    m = df["m"].iloc[0]
-    amp = np.abs(df["θ"]).max() * 180 / np.pi  # convertir a grados aprox
-    # Clasificar ángulo como chico, medio o grande
-    if amp < 10:
-        ang_cat = 'chico'
-    elif amp < 30:
-        ang_cat = 'medio'
-    else:
-        ang_cat = 'grande'
-    summary.append({'l': l, 'w': w, 'm': m, 'ángulo': ang_cat})
+    col = { 
+        6.07 : 'cyan',
+        22.15 : 'violet',
+        72.36 : 'yellow'
+    }
 
-# Convertir a DataFrame
-summary_df = pd.DataFrame(summary)
+    for m0 in dfM:
+        x1 = [max(df['θ']) for df in m0 if df['r'][0] >= 30]
+        y1 = [angularFreq(df, df.period) for df in m0 if df['r'][0] >= 30]
 
-# Asignar colores y estilos
-massas = sorted(summary_df['m'].unique())
-angulos = ['chico', 'medio', 'grande']
-colores = ['#1f77b4', '#2ca02c', '#d62728']  # azul, verde, rojo
-line_styles = ['-', '--', ':']
+        x2 = [max(df['θ']) for df in m0 if df['r'][0] < 30]
+        y2 = [angularFreq(df, df.period) for df in m0 if df['r'][0] < 30]
 
-color_dict = {m: c for m, c in zip(massas, colores)}
-style_dict = {a: s for a, s in zip(angulos, line_styles)}
+        mass = m0[0].m
+        label1 = rf'$m = {mass} \pm 0.01$g, $L \approx 32.8cm$'
+        label2 = rf'$m = {mass} \pm 0.01$g, $L \approx 21.2cm$'
 
-# Graficar
-plt.figure(figsize=(10, 6))
+        plt.plot(x1,y1, 'X', label=label1, markersize=8, color=col[mass], markeredgecolor='black')
+        plt.plot(x2,y2, 'o', label=label2, markersize=8, color=col[mass], markeredgecolor='black')
 
-for m in massas:
-    for a in angulos:
-        subset = summary_df[(summary_df['m'] == m) & (summary_df['ángulo'] == a)]
-        if not subset.empty:
-            plt.plot(subset['l'], subset['w'], 
-                     linestyle=style_dict[a], 
-                     color=color_dict[m], 
-                     marker='o', 
-                     label=f"m={m:.2f} kg, ángulo={a}")
+    plt.xlabel(r"Ángulo inicial $\theta_0$ [ºC]")
+    plt.ylabel(r"Frecuencia angular $\omega$ [rad/s]")
+    plt.grid(True)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout()
+    plt.title(r"$\theta_0$ vs $\omega$")
 
-plt.xlabel('Longitud l (m)')
-plt.ylabel('Frecuencia angular ω (rad/s)')
-plt.title('Frecuencia angular vs Longitud para distintas masas y ángulos')
-plt.grid(True)
-plt.legend(loc='best', fontsize=9)
-plt.tight_layout()
-plt.savefig('grafico_unico_w_vs_l.png', dpi=300)
-plt.show()
+    plt.savefig("../Graphs/AngleVsAngularFreq.png", bbox_inches='tight')
+
+##### [2]
