@@ -60,4 +60,49 @@ def differentLenght():
     plt.grid(True)
     plt.legend()
     plt.savefig("../Graphs/differentLength.png", bbox_inches='tight')
+
+def plot_trajectories_grid():
+    # Usar solo los primeros 18 CSVs
+    DF_sub = DF[:18]
     
+    masses = [6.07, 22.15, 72.36]
+    styles = ['-', '--', ':']
+    markers = ['o', 's', '^']
+    
+    fig, axs = plt.subplots(3, 2, figsize=(14, 12), sharex=True, sharey=True)
+    fig.suptitle("Trayectorias angulares (θ vs t)", fontsize=16)
+
+    for i, m in enumerate(masses):
+        df_mass = [df for df in DF_sub if df.m == m]
+
+        # L largo (r >= 30)
+        long_l = [df for df in df_mass if df['r'][0] >= 30]
+        # L corto (r < 30)
+        long_c = [df for df in df_mass if df['r'][0] < 30]
+
+        for j, long_group in enumerate([long_l, long_c]):
+            ax = axs[i, j]
+
+            for k, df in enumerate(long_group):
+                style = styles[k % len(styles)]
+                marker = markers[k % len(markers)]
+                label = fr"$\theta_0 \approx {max(df['θ']):.1f}$ rad"
+
+                ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
+                        label=label, markevery=15)
+
+            title = "Larga" if j == 0 else "Corta"
+            ax.set_title(f"m = {m} g, L {title}")
+            ax.grid(True)
+            if j == 0:
+                ax.set_ylabel(r"$\theta(t)$ [rad]")
+            if i == 2:
+                ax.set_xlabel("Tiempo [s]")
+            ax.legend(fontsize=8)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig("../Graphs/Trajectories_Grid.png", bbox_inches='tight')
+    plt.close()
+
+
+plot_trajectories_grid()
