@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from calcs import DF, DF2, angularFreq, oscilationFreq, radius
+from scipy.signal import find_peaks
+from collections import defaultdict
+import matplotlib.cm as cm
+
 
 # DF por masas
 m1 = [df for df in DF if df.m == 6.07]
@@ -86,7 +90,7 @@ def plot_trajectories_grid():
             for k, df in enumerate(long_group):
                 style = styles[k % len(styles)]
                 marker = markers[k % len(markers)]
-                label = fr"$\theta_0 \approx {max(df['θ']):.1f}$ rad"
+                label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
 
                 ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
                         label=label, markevery=15)
@@ -95,7 +99,7 @@ def plot_trajectories_grid():
             ax.set_title(f"m = {m} g, L {title}")
             ax.grid(True)
             if j == 0:
-                ax.set_ylabel(r"$\theta(t)$ [rad]")
+                ax.set_ylabel(r"$\theta(t)$°")
             if i == 2:
                 ax.set_xlabel("Tiempo [s]")
             ax.legend(fontsize=8)
@@ -104,5 +108,28 @@ def plot_trajectories_grid():
     plt.savefig("../Graphs/Trajectories_Grid.png", bbox_inches='tight')
     plt.close()
 
+def omega_vs_m_and_L_grados():
+    dfs = DF[:18]  # Solo los primeros 18
+    w = [angularFreq(df.assign(θ=np.deg2rad(df['θ'])), df.period) for df in dfs]
+    m = [df.m for df in dfs]  # masa en gramos
+    l = [radius(df) for df in dfs]  # longitud en cm
 
-plot_trajectories_grid()
+    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+
+    # ω vs masa
+    axs[0].plot(m, w, 'o', color='blue', markeredgecolor='black')
+    axs[0].set_xlabel("Masa [g]")
+    axs[0].set_ylabel("Frecuencia angular ω [rad/s]")
+    axs[0].set_title("ω vs masa")
+    axs[0].grid(True)
+
+    # ω vs longitud
+    axs[1].plot(l, w, 'o', color='green', markeredgecolor='black')
+    axs[1].set_xlabel("Longitud L [cm]")
+    axs[1].set_ylabel("Frecuencia angular ω [rad/s]")
+    axs[1].set_title("ω vs longitud")
+    axs[1].grid(True)
+
+    plt.tight_layout()
+    plt.savefig("../Graphs/OmegaVsMasaYLongitud.png")
+    plt.show()
