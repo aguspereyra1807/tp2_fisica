@@ -133,3 +133,63 @@ def omega_vs_m_and_L_grados():
     plt.tight_layout()
     plt.savefig("../Graphs/OmegaVsMasaYLongitud.png")
     plt.show()
+
+
+def plot_grid_maximos_con_fit(DF):
+    masas = [6.07, 22.15, 72.36]
+    largos_labels = ['Long. Mayor', 'Long. Menor']
+
+    fig, axs = plt.subplots(3, 2, figsize=(16, 14), sharex=True, sharey=True)
+    fig.suptitle(r"Amplitud de oscilacion de $\theta(t)$° con ajuste lineal", fontsize=18)
+
+    for i, m in enumerate(masas):
+        dfs_masa = [df for df in DF if df.m == m]
+
+        # Separar por largo
+        dfs_larga = [df for df in dfs_masa if df['r'].iloc[0] >= 30]
+        dfs_corta = [df for df in dfs_masa if df['r'].iloc[0] < 30]
+
+        colores = ["#0C1CAB", "#750567", "#2c94a0"]
+        
+        for j, dfs_largo in enumerate([dfs_larga, dfs_corta]):
+            ax = axs[i, j]
+
+            for k, df in enumerate(dfs_largo):
+                t = df['t'].values
+                theta = df['θ'].values
+
+                # Encontrar máximos
+                peaks, _ = find_peaks(theta)
+                t_peaks = t[peaks]
+                theta_peaks = theta[peaks]
+
+                # Color y estilo para esta curva
+                color = colores[k % len(colores)]
+                
+                # Plot curva original sin marker, solo línea
+                ax.plot(t, theta, '-', color=color, label=f'θ₀ ≈ {max(theta):.1f}°')
+
+                # Plot máximos como puntos X (sin marker en curva, solo aquí)
+                ax.plot(t_peaks, theta_peaks, color=color, marker="o", markersize=8, linestyle='None',
+                        label=f'Máximos θ₀ ≈ {max(theta):.1f}°')
+
+                # Ajuste lineal a los máximos
+                if len(t_peaks) > 1:
+                    slope, intercept, r_value, p_value, std_err = linregress(t_peaks, theta_peaks)
+                    t_fit = np.linspace(t_peaks.min(), t_peaks.max(), 100)
+                    theta_fit = slope * t_fit + intercept
+                    ax.plot(t_fit, theta_fit, linestyle='--', color=color,
+                            label=f'Ajuste max θ₀ ≈ {max(theta):.1f}°')
+
+            ax.set_title(f'Masa = {m} g, {largos_labels[j]}')
+            ax.grid(True)
+            if j == 0:
+                ax.set_ylabel(r'Ángulo θ [°]')
+            if i == 2:
+                ax.set_xlabel('Tiempo [s]')
+            ax.legend(fontsize=8)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
+    plt.savefig("../Graphs/MaximosConFit.png")
+    plt.close()
