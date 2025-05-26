@@ -77,5 +77,15 @@ for df2 in DF2:
         df2.w = angularFreq(df2, df2.period)
         df2.f = oscilationFreq(df2, df2.period)
 
+############### Cálculos varios
+
+def estimateGravity():
+    samples = []
+    for df in DF:
+        r = np.mean(df['r']) / 100 # cm -> m
+        samples.append( (4 * r * np.pi ** 2) / (df.period ** 2) )
+    return round(np.mean(samples), 2), samples
+
 if __name__ == '__main__':
-    pass
+    print(estimateGravity())
+
