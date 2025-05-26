@@ -87,5 +87,5 @@ def estimateGravity():
     return round(np.mean(samples), 2), samples
 
 if __name__ == '__main__':
-    print(estimateGravity())
+    print(estimateGravity()[0])
 

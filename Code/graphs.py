@@ -107,13 +107,13 @@ def plot_trajectories_grid():
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.savefig("../Graphs/Trajectories_Grid.png", bbox_inches='tight')
-    plt.close()
+
+###### [3] L vs ω y m vs ω
 
 def omega_vs_m_and_L_grados():
-    dfs = DF[:18]  # Solo los primeros 18
-    w = [angularFreq(df.assign(θ=np.deg2rad(df['θ'])), df.period) for df in dfs]
-    m = [df.m for df in dfs]  # masa en gramos
-    l = [radius(df) for df in dfs]  # longitud en cm
+    w = [angularFreq(df.assign(θ=np.deg2rad(df['θ'])), df.period) for df in DF]
+    m = [df.m for df in DF]  # masa en gramos
+    l = [radius(df) for df in DF]  # longitud en cm
 
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -133,10 +133,10 @@ def omega_vs_m_and_L_grados():
 
     plt.tight_layout()
     plt.savefig("../Graphs/OmegaVsMasaYLongitud.png")
-    plt.show()
 
+###### [4]  
 
-def plot_grid_maximos_con_fit(DF):
+def plot_grid_maximos_con_fit():
     masas = [6.07, 22.15, 72.36]
     largos_labels = ['Long. Mayor', 'Long. Menor']
 
@@ -150,7 +150,7 @@ def plot_grid_maximos_con_fit(DF):
         dfs_larga = [df for df in dfs_masa if df['r'].iloc[0] >= 30]
         dfs_corta = [df for df in dfs_masa if df['r'].iloc[0] < 30]
 
-        colores = ["#0C1CAB", "#750567", "#2c94a0"]
+        colores = ["#0C1CAB", "#750567", "#2c94a0"] 
         
         for j, dfs_largo in enumerate([dfs_larga, dfs_corta]):
             ax = axs[i, j]
@@ -191,6 +191,4 @@ def plot_grid_maximos_con_fit(DF):
             ax.legend(fontsize=8)
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.show()
     plt.savefig("../Graphs/MaximosConFit.png")
-    plt.close()
