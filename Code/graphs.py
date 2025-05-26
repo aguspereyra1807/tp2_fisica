@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from calcs import DF, DF2, angularFreq, oscilationFreq, radius
 from scipy.signal import find_peaks
+from scipy.stats import linregress
 from collections import defaultdict
 import matplotlib.cm as cm
 
