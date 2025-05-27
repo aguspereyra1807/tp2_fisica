@@ -1,4 +1,4 @@
-from graphs import AngleVsAngular, differentLenght, plot_grid_maximos_con_fit
+from graphs import angleVsAngular, differentLenght, trajectoriesGrid, gridMaxLinealRegression, angularVsMassLarge
 
 if __name__ == '__main__':
-    plot_grid_maximos_con_fit()
+    trajectoriesGrid()

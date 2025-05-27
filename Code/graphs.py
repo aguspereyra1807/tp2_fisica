@@ -14,42 +14,51 @@ m2 = [df for df in DF if df.m == 22.15]
 m3 = [df for df in DF if df.m == 72.36]
 dfM = [m1,m2,m3]
 
-#### [1] (Información general)
+#### [1] ω vs θ inicial con propagación de errores
 ##### ω en función de θ inicial
 
-def AngleVsAngular():
+def angleVsAngular():
     plt.figure(figsize=(12,8))
 
     col = { 
-        6.07 : 'cyan',
-        22.15 : 'violet',
-        72.36 : 'yellow'
+        6.07 : "#b00000",
+        22.15 : "#17bc96",
+        72.36 : "#cfcc0c"
+    }
+
+    ecol = {
+        6.07 : "#B52121",
+        22.15 : "#19c29a",
+        72.36 : "#d9d626"
     }
 
     for m0 in dfM:
         x1 = [max(df['θ']) for df in m0 if df['r'][0] >= 30]
-        y1 = [angularFreq(df, df.period) for df in m0 if df['r'][0] >= 30]
+        y1 = [df.w for df in m0 if df['r'][0] >= 30]
+        err1 = [df.angularError for df in m0 if df['r'][0] >= 30]
 
         x2 = [max(df['θ']) for df in m0 if df['r'][0] < 30]
-        y2 = [angularFreq(df, df.period) for df in m0 if df['r'][0] < 30]
+        y2 = [df.w for df in m0 if df['r'][0] < 30]
+        err2 = [df.angularError for df in m0 if df['r'][0] < 30]
 
         mass = m0[0].m
         label1 = rf'$m = {mass} \pm 0.01$g, $L \approx 32.8cm$'
         label2 = rf'$m = {mass} \pm 0.01$g, $L \approx 21.2cm$'
 
-        plt.plot(x1,y1, 'X', label=label1, markersize=8, color=col[mass], markeredgecolor='black')
-        plt.plot(x2,y2, 'o', label=label2, markersize=8, color=col[mass], markeredgecolor='black')
+        plt.errorbar(x1,y1, err1, fmt='^', label=label1, markersize=6, color=col[mass], markeredgecolor='black', ecolor=ecol[mass], elinewidth=1, capsize=3)
+        plt.errorbar(x2,y2, err2, fmt='v', label=label2, markersize=6, color=col[mass], markeredgecolor='black', ecolor=ecol[mass], elinewidth=1, capsize=3)
 
     plt.xlabel(r"Ángulo inicial $\theta_0$ [ºC]")
     plt.ylabel(r"Frecuencia angular $\omega$ [rad/s]")
     plt.grid(True)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
-    plt.title(r"$\theta_0$ vs $\omega$")
+    plt.title(r"$\theta_0$ vs $\omega$ con propagación de errores")
 
-    plt.savefig("../Graphs/AngleVsAngularFreq.png", bbox_inches='tight')
+    plt.savefig("../Graphs/AngleVsAngularFreq2.png", bbox_inches='tight')
 
-##### [2]
+
+##### [2] Variación de ω con el largo 
 ##### m, θ constantes: L1, L2, L3 
 
 def differentLenght():
@@ -66,8 +75,12 @@ def differentLenght():
     plt.legend()
     plt.savefig("../Graphs/differentLength.png", bbox_inches='tight')
 
-def plot_trajectories_grid():
-    # Usar solo los primeros 18 CSVs
+##### [3] Todas las trayectorias
+##### θ(t)
+
+def trajectoriesGrid():
+    colors = [ "#b0009e", "#1772bc", "#0ccf43"]
+    
     DF_sub = DF[:18]
     
     masses = [6.07, 22.15, 72.36]
@@ -75,7 +88,7 @@ def plot_trajectories_grid():
     markers = ['o', 's', '^']
     
     fig, axs = plt.subplots(3, 2, figsize=(14, 12), sharex=True, sharey=True)
-    fig.suptitle("Trayectorias angulares (θ vs t)", fontsize=16)
+    fig.suptitle(r"Trayectorias angulares ($\theta$ vs $t$)", fontsize=16)
 
     for i, m in enumerate(masses):
         df_mass = [df for df in DF_sub if df.m == m]
@@ -91,31 +104,33 @@ def plot_trajectories_grid():
             for k, df in enumerate(long_group):
                 style = styles[k % len(styles)]
                 marker = markers[k % len(markers)]
+                col = colors[k % len(colors)]
                 label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
 
                 ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
-                        label=label, markevery=15)
+                        label=label, markevery=15, color=col)
 
             title = "Larga" if j == 0 else "Corta"
-            ax.set_title(f"m = {m} g, L {title}")
+            ax.set_title(rf"$m$ = {m} g, $L$ {title}")
             ax.grid(True)
             if j == 0:
-                ax.set_ylabel(r"$\theta(t)$°")
+                ax.set_ylabel(r"$\theta(t)$ [$°C$]")
             if i == 2:
-                ax.set_xlabel("Tiempo [s]")
+                ax.set_xlabel(r"Tiempo [$s$]")
             ax.legend(fontsize=8)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.savefig("../Graphs/Trajectories_Grid.png", bbox_inches='tight')
+    plt.tight_layout()
+    plt.savefig("../Graphs/TrajectoriesGrid.png", bbox_inches='tight')
 
-###### [3] L vs ω y m vs ω
+###### [3] ω 
+###### L vs ω y m vs ω
 
-def omega_vs_m_and_L_grados():
+def angularVsMassLarge():
     w = [angularFreq(df.assign(θ=np.deg2rad(df['θ'])), df.period) for df in DF]
     m = [df.m for df in DF]  # masa en gramos
     l = [radius(df) for df in DF]  # longitud en cm
 
-    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+    _, axs = plt.subplots(1, 2, figsize=(14, 6))
 
     # ω vs masa
     axs[0].plot(m, w, 'o', color='blue', markeredgecolor='black')
@@ -134,14 +149,15 @@ def omega_vs_m_and_L_grados():
     plt.tight_layout()
     plt.savefig("../Graphs/OmegaVsMasaYLongitud.png")
 
-###### [4]  
+###### [4] Máximos y ajuste lineal
+###### θ(t)
 
-def plot_grid_maximos_con_fit():
+def gridMaxLinealRegression():
     masas = [6.07, 22.15, 72.36]
     largos_labels = ['Long. Mayor', 'Long. Menor']
 
     fig, axs = plt.subplots(3, 2, figsize=(16, 14), sharex=True, sharey=True)
-    fig.suptitle(r"Amplitud de oscilacion de $\theta(t)$° con ajuste lineal", fontsize=18)
+    fig.suptitle(r"Amplitud de oscilacion de $\theta(t)$° con ajuste lineal", fontsize=19)
 
     for i, m in enumerate(masas):
         dfs_masa = [df for df in DF if df.m == m]
@@ -168,27 +184,27 @@ def plot_grid_maximos_con_fit():
                 color = colores[k % len(colores)]
                 
                 # Plot curva original sin marker, solo línea
-                ax.plot(t, theta, '-', color=color, label=f'θ₀ ≈ {max(theta):.1f}°')
+                ax.plot(t, theta, '-', color=color, label=rf'$\theta_0 \approx$ {max(theta):.1f}°')
 
                 # Plot máximos como puntos X (sin marker en curva, solo aquí)
                 ax.plot(t_peaks, theta_peaks, color=color, marker="o", markersize=8, linestyle='None',
-                        label=f'Máximos θ₀ ≈ {max(theta):.1f}°')
+                        label=rf'Máximos $\theta_0 \approx$ {max(theta):.1f}°')
 
                 # Ajuste lineal a los máximos
                 if len(t_peaks) > 1:
-                    slope, intercept, r_value, p_value, std_err = linregress(t_peaks, theta_peaks)
+                    slope, intercept, _, _, _ = linregress(t_peaks, theta_peaks)
                     t_fit = np.linspace(t_peaks.min(), t_peaks.max(), 100)
                     theta_fit = slope * t_fit + intercept
                     ax.plot(t_fit, theta_fit, linestyle='--', color=color,
-                            label=f'Ajuste max θ₀ ≈ {max(theta):.1f}°')
+                            label=rf'Ajuste max $\theta_0 \approx${max(theta):.1f}°')
 
-            ax.set_title(f'Masa = {m} g, {largos_labels[j]}')
+            ax.set_title(rf'$m$ = {m} g, {largos_labels[j]}')
             ax.grid(True)
             if j == 0:
-                ax.set_ylabel(r'Ángulo θ [°]')
+                ax.set_ylabel(r'Ángulo $\theta$ [°]')
             if i == 2:
-                ax.set_xlabel('Tiempo [s]')
-            ax.legend(fontsize=8)
+                ax.set_xlabel(r'Tiempo [$s$]')
+            ax.legend(fontsize=7)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout()
     plt.savefig("../Graphs/MaximosConFit.png")

@@ -22,25 +22,40 @@ for i in range(19,22):
 ############################## Calculos generales #############################
 
 def period(df: pd.DataFrame):
-    ''' T = t[θmax2] - t[θmax1] '''
+    ''' 
+    T = t[θmax2] - t[θmax1] 
+    Devuelve el promedio de todos los periodos encontrados y el desvío estandar
+    '''
 
-    maxs, _ = signal.find_peaks(df["θ"]) # Encuentra picos del ángulo encuentro 2 θmax
+    maxs, _ = signal.find_peaks(df["θ"], prominence=1, distance=10) # Encuentra picos del ángulo encuentro 2 θmax
+
+    if df["θ"].iloc[0] > df["θ"].iloc[1]: # Si el primero es un pico
+        maxs = np.insert(maxs, 0, 0)
+    
     periods = []
     for i in range(len(maxs)-1):
         t1 = df["t"].iloc[maxs[i+1]]
         t0 = df["t"].iloc[maxs[i]]
         periods.append(t1-t0)  
-    return round(np.mean(periods), 2)
-
-def angularFreq(df: pd.DataFrame, t: float):
-    ''' ω = 2π / T '''
     
-    return round((2*np.pi) / t, 2)
+    return round(np.mean(periods), 2), np.std(periods)
 
-def oscilationFreq(df: pd.DataFrame, t: float):
+def angularFreq(df: pd.DataFrame):
+    ''' 
+    ω = 2π / T
+    δω = (-2π / T^2) * δT
+    '''
+    
+    w = (2 * np.pi) / df.period
+
+    wError = np.abs(((-2 * np.pi) / df.period**2) * df.periodError)
+
+    return round(w, 2), wError
+
+def oscilationFreq(df: pd.DataFrame):
     ''' f = 1 / T '''
 
-    return round(1/t, 2) 
+    return round(1/df.period, 2) 
 
 def radius(df: pd.DataFrame):
     return round(np.mean(df["r"]), 2)
@@ -67,15 +82,14 @@ def oscilationFreqSO(df: pd.DataFrame):
 
 ############### Cargo valores T, ω, f
 
-for df in DF:
-        df.period = period(df)
-        df.w = angularFreq(df, df.period)
-        df.f = oscilationFreq(df, df.period)
-
-for df2 in DF2:
-        df2.period = period(df2)
-        df2.w = angularFreq(df2, df2.period)
-        df2.f = oscilationFreq(df2, df2.period)
+for df in DF+DF2:
+        T, errorT = period(df)
+        df.period = T
+        df.periodError = errorT
+        W, errorW = angularFreq(df)
+        df.w = W
+        df.angularError = errorW
+        df.f = oscilationFreq(df)
 
 ############### Cálculos varios
 
@@ -87,5 +101,6 @@ def estimateGravity():
     return round(np.mean(samples), 2), samples
 
 if __name__ == '__main__':
-    print(estimateGravity()[0])
-
+    for i, df in enumerate(DF):
+        print(f'{i+1}. dT->', df.periodError)
+        print(f'{i+1}. dw->', df.angularError)
