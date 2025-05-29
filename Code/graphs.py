@@ -94,43 +94,56 @@ def trajectoriesGrid():
     styles = ['-', '--', ':']
     markers = ['o', 's', '^']
     
-    fig, axs = plt.subplots(6, 1, figsize=(8, 24), sharex=True)
-    fig.suptitle(r"Trayectorias angulares ($\theta$ vs $t$)", fontsize=16)
+    # --- Largos mayores ---
+    fig1, axs1 = plt.subplots(3, 1, figsize=(8, 12), sharex=True)
+    fig1.suptitle(r"Trayectorias angulares ($\theta$ vs $t$) de $L \approx 32.8$cm", fontsize=16)
 
     for i, m in enumerate(masses):
         df_mass = [df for df in DF_sub if df.m == m]
-
-        # L largo (r >= 30)
         long_l = [df for df in df_mass if df['r'][0] >= 30]
-        # L corto (r < 30)
+        ax = axs1[i]
+        for k, df in enumerate(long_l):
+            style = styles[k % len(styles)]
+            marker = markers[k % len(markers)]
+            col = colors[k % len(colors)]
+            label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
+            ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
+                    label=label, markevery=15, color=col)
+        ax.set_title(rf"$m \approx$ {m} g")
+        ax.grid(True)
+        ax.set_ylabel(r"$\theta(t)$ [$°$]")
+        if i == 2:
+            ax.set_xlabel(r"Tiempo [$s$]")
+        ax.legend(fontsize=8)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig("../Graphs/TrajectoriesGridLargos.png", bbox_inches='tight')
+
+    # --- Largos menores ---
+    fig2, axs2 = plt.subplots(3, 1, figsize=(8, 12), sharex=True)
+    fig2.suptitle(r"Trayectorias angulares ($\theta$ vs $t$) de $L \approx 21.2$cm", fontsize=16)
+
+    for i, m in enumerate(masses):
+        df_mass = [df for df in DF_sub if df.m == m]
         long_c = [df for df in df_mass if df['r'][0] < 30]
+        ax = axs2[i]
+        for k, df in enumerate(long_c):
+            style = styles[k % len(styles)]
+            marker = markers[k % len(markers)]
+            col = colors[k % len(colors)]
+            label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
+            ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
+                    label=label, markevery=15, color=col)
+        ax.set_title(rf"$m \approx$ {m} g")
+        ax.grid(True)
+        ax.set_ylabel(r"$\theta(t)$ [$°$]")
+        if i == 2:
+            ax.set_xlabel(r"Tiempo [$s$]")
+        ax.legend(fontsize=8)
 
-    
-        idx = 0
-        for i, m in enumerate(masses):
-            df_mass = [df for df in DF_sub if df.m == m]
-            long_l = [df for df in df_mass if df['r'][0] >= 30]
-            long_c = [df for df in df_mass if df['r'][0] < 30]
-            for j, long_group in enumerate([long_l, long_c]):
-                ax = axs[idx]
-                for k, df in enumerate(long_group):
-                    style = styles[k % len(styles)]
-                    marker = markers[k % len(markers)]
-                    col = colors[k % len(colors)]
-                    label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
-                    ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
-                            label=label, markevery=15, color=col)
-                title = "Larga" if j == 0 else "Corta"
-                ax.set_title(rf"$m$ = {m} g, $L$ {title}")
-                ax.grid(True)
-                ax.set_ylabel(r"$\theta(t)$ [$°$]")
-                if idx == 5:
-                    ax.set_xlabel(r"Tiempo [$s$]")
-                ax.legend(fontsize=8)
-                idx += 1
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig("../Graphs/TrajectoriesGridCortos.png", bbox_inches='tight')
 
-    plt.tight_layout(rect=[0, 0, 1, 0.985])
-    plt.savefig("../Graphs/TrajectoriesGrid.png", bbox_inches='tight')
 
 ###### [3] ω 
 ###### L vs ω y m vs ω
