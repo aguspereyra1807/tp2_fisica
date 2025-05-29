@@ -64,9 +64,16 @@ def angleVsAngular():
 def differentLenght():
     w_exp = [df.w for df in DF2]
     l_values = [radius(df) for df in DF2]  # l es el promedio de r en cada experimento
+    initialMean = np.mean([max(DF2[0]['θ']), max(DF2[1]['θ']), max(DF2[2]['θ'])])
 
     plt.figure(figsize=(12,8))
-    plt.plot(l_values, w_exp, '-o', label=r'$\omega$ experimental', markersize=8, color='red', markeredgecolor='black')
+
+    slope, intercept, _, _, _ = linregress(l_values, w_exp)
+    t_fit = np.linspace(min(l_values), max(l_values), 100)
+    theta_fit = slope * t_fit + intercept
+    plt.plot(t_fit, theta_fit, linestyle='--', color='#ff484d', label=rf'Ajuste lineal')
+
+    plt.plot(l_values, w_exp, 'o', markersize=8, color='red', markeredgecolor='black', label=rf'$\theta_0 \approx {initialMean}°, m = $')
 
     plt.xlabel(r'Longitud del péndulo $L$ [cm]')
     plt.ylabel(r'Frecuencia angular $\omega$ [rad/s]')
@@ -87,7 +94,7 @@ def trajectoriesGrid():
     styles = ['-', '--', ':']
     markers = ['o', 's', '^']
     
-    fig, axs = plt.subplots(3, 2, figsize=(14, 12), sharex=True, sharey=True)
+    fig, axs = plt.subplots(6, 1, figsize=(8, 24), sharex=True)
     fig.suptitle(r"Trayectorias angulares ($\theta$ vs $t$)", fontsize=16)
 
     for i, m in enumerate(masses):
@@ -98,28 +105,31 @@ def trajectoriesGrid():
         # L corto (r < 30)
         long_c = [df for df in df_mass if df['r'][0] < 30]
 
-        for j, long_group in enumerate([long_l, long_c]):
-            ax = axs[i, j]
+    
+        idx = 0
+        for i, m in enumerate(masses):
+            df_mass = [df for df in DF_sub if df.m == m]
+            long_l = [df for df in df_mass if df['r'][0] >= 30]
+            long_c = [df for df in df_mass if df['r'][0] < 30]
+            for j, long_group in enumerate([long_l, long_c]):
+                ax = axs[idx]
+                for k, df in enumerate(long_group):
+                    style = styles[k % len(styles)]
+                    marker = markers[k % len(markers)]
+                    col = colors[k % len(colors)]
+                    label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
+                    ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
+                            label=label, markevery=15, color=col)
+                title = "Larga" if j == 0 else "Corta"
+                ax.set_title(rf"$m$ = {m} g, $L$ {title}")
+                ax.grid(True)
+                ax.set_ylabel(r"$\theta(t)$ [$°$]")
+                if idx == 5:
+                    ax.set_xlabel(r"Tiempo [$s$]")
+                ax.legend(fontsize=8)
+                idx += 1
 
-            for k, df in enumerate(long_group):
-                style = styles[k % len(styles)]
-                marker = markers[k % len(markers)]
-                col = colors[k % len(colors)]
-                label = fr"$\theta_0 \approx {max(df['θ']):.1f}$°"
-
-                ax.plot(df['t'], df['θ'], linestyle=style, marker=marker,
-                        label=label, markevery=15, color=col)
-
-            title = "Larga" if j == 0 else "Corta"
-            ax.set_title(rf"$m$ = {m} g, $L$ {title}")
-            ax.grid(True)
-            if j == 0:
-                ax.set_ylabel(r"$\theta(t)$ [$°C$]")
-            if i == 2:
-                ax.set_xlabel(r"Tiempo [$s$]")
-            ax.legend(fontsize=8)
-
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.985])
     plt.savefig("../Graphs/TrajectoriesGrid.png", bbox_inches='tight')
 
 ###### [3] ω 

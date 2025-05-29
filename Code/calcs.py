@@ -37,7 +37,7 @@ def period(df: pd.DataFrame):
         t1 = df["t"].iloc[maxs[i+1]]
         t0 = df["t"].iloc[maxs[i]]
         periods.append(t1-t0)  
-    
+    2
     return round(np.mean(periods), 2), np.std(periods)
 
 def angularFreq(df: pd.DataFrame):
@@ -101,6 +101,4 @@ def estimateGravity():
     return round(np.mean(samples), 2), samples
 
 if __name__ == '__main__':
-    for i, df in enumerate(DF):
-        print(f'{i+1}. dT->', df.periodError)
-        print(f'{i+1}. dw->', df.angularError)
+    pass
