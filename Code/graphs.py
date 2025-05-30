@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from calcs import DF, DF2, angularFreq, oscilationFreq, radius
 from scipy.signal import find_peaks
 from scipy.stats import linregress
+from scipy.interpolate import make_interp_spline
 from collections import defaultdict
 import matplotlib.cm as cm
 
@@ -58,29 +59,76 @@ def angleVsAngular():
     plt.savefig("../Graphs/AngleVsAngularFreq2.png", bbox_inches='tight')
 
 
-##### [2] Variación de ω con el largo 
+##### [2] Variación de ω con largos (+ ajuste polinómico)
 ##### m, θ constantes: L1, L2, L3 
 
-def differentLenght():
-    w_exp = [df.w for df in DF2]
-    l_values = [radius(df) for df in DF2]  # l es el promedio de r en cada experimento
+def angularVsL():
+    wValues = [df.w for df in DF2]
+    wErr = [df.angularError for df in DF2]
+    lValues = [30, 20, 10]  # l es el promedio de r en cada experimento
+    lErr = [0.1, 0.1, 0.1]
     initialMean = np.mean([max(DF2[0]['θ']), max(DF2[1]['θ']), max(DF2[2]['θ'])])
 
     plt.figure(figsize=(12,8))
 
-    slope, intercept, _, _, _ = linregress(l_values, w_exp)
-    t_fit = np.linspace(min(l_values), max(l_values), 100)
-    theta_fit = slope * t_fit + intercept
-    plt.plot(t_fit, theta_fit, linestyle='--', color='#ff484d', label=rf'Ajuste lineal')
+    # Puntos + error de ω
+    plt.errorbar(lValues, wValues, xerr=lErr, yerr=wErr, fmt='o', markersize=8, color='#ff484d', markeredgecolor='black', ecolor="#000000", elinewidth=1, capsize=3, barsabove=False, label=rf'$\theta_0 \approx {initialMean}°, m \approx 72.36g$')
 
-    plt.plot(l_values, w_exp, 'o', markersize=8, color='red', markeredgecolor='black', label=rf'$\theta_0 \approx {initialMean}°, m = $')
+    # Ajuste polimonial
+    grado = 2
+    coef = np.polyfit(lValues, wValues, grado)
+    p = np.poly1d(coef)
+    l_fit = np.linspace(min(lValues), max(lValues), 100)
+    w_fit = p(l_fit)
+    plt.plot(l_fit, w_fit, linestyle='--', color="#bc1f25", label=f'Ajuste polinómico (grado {grado})')
 
     plt.xlabel(r'Longitud del péndulo $L$ [cm]')
     plt.ylabel(r'Frecuencia angular $\omega$ [rad/s]')
-    plt.title(r'$\omega$ vs $L$')
+    plt.title(r'$\omega$ vs $L$ con ajuste polinómico')
     plt.grid(True)
-    plt.legend()
-    plt.savefig("../Graphs/differentLength.png", bbox_inches='tight')
+    plt.legend(fontsize=15, loc='upper right')
+    plt.savefig("../Graphs/wVsL2.png", bbox_inches='tight')
+
+##### [3] Variación de ω con masas 
+##### L, θ constantes: m1, m2, m3 
+def angularVsM():
+    colors = {
+        0 : "#ff1616",
+        1 : "#ff4124",
+        2: "#ff8010"
+    }
+
+    dfs1 = [DF[0], DF[3], DF[6]]
+    dfs2 = [DF[9], DF[12], DF[15]]
+    dfs3 = [DF[11], DF[14], DF[17]]
+    DFS = [dfs1, dfs2, dfs3]
+
+    plt.figure(figsize=(12,8))
+
+    for i, dfs in enumerate(DFS):
+        wValues = [df.w for df in dfs]
+        wErr = [df.angularError for df in dfs]
+        mValues = [df.m for df in dfs] 
+        mErr = [0.1, 0.1, 0.1]
+        angleMean = round(np.mean([max(dfs[0]['θ']), max(dfs[1]['θ']), max(dfs[2]['θ'])]), 2)
+        lMean = round(np.mean([max(dfs[0]['r']), max(dfs[1]['θ']), max(dfs[2]['θ'])]), 2)
+
+        # Puntos + error de ω y m
+        plt.errorbar(mValues, wValues, xerr=mErr, yerr=wErr, fmt='o', markersize=8, color=colors[i], markeredgecolor='black', ecolor="#000000", elinewidth=1, capsize=3, barsabove=False, label=rf'$\theta_0 \approx {angleMean}°, L \approx {lMean}cm$')
+
+        # Interpolación
+        l_fit = np.linspace(min(mValues), max(mValues), 200)
+        spline = make_interp_spline(mValues, wValues, k=2)  # k=3 para cúbico
+        w_fit = spline(l_fit)
+        plt.plot(l_fit, w_fit, linestyle='--', color=colors[i], label='Interpolación (spline grado 2)')
+
+    plt.xlabel(r'Masa $m$ [g]')
+    plt.ylabel(r'Frecuencia angular $\omega$ [rad/s]')
+    plt.title(r'$\omega$ vs $m$')
+    plt.grid(True)
+    plt.legend(fontsize=13, loc='center left', bbox_to_anchor=(0.6, 0.95))
+    plt.savefig("../Graphs/wVsM.png", bbox_inches='tight')
+
 
 ##### [3] Todas las trayectorias
 ##### θ(t)
@@ -94,7 +142,6 @@ def trajectoriesGrid():
     styles = ['-', '--', ':']
     markers = ['o', 's', '^']
     
-    # --- Largos mayores ---
     fig1, axs1 = plt.subplots(3, 1, figsize=(8, 12), sharex=True)
     fig1.suptitle(r"Trayectorias angulares ($\theta$ vs $t$) de $L \approx 32.8$cm", fontsize=16)
 
@@ -119,7 +166,6 @@ def trajectoriesGrid():
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig("../Graphs/TrajectoriesGridLargos.png", bbox_inches='tight')
 
-    # --- Largos menores ---
     fig2, axs2 = plt.subplots(3, 1, figsize=(8, 12), sharex=True)
     fig2.suptitle(r"Trayectorias angulares ($\theta$ vs $t$) de $L \approx 21.2$cm", fontsize=16)
 
@@ -177,57 +223,93 @@ def angularVsMassLarge():
 
 def gridMaxLinealRegression():
     masas = [6.07, 22.15, 72.36]
-    largos_labels = ['Long. Mayor', 'Long. Menor']
+    colores = ["#0C1CAB", "#750567", "#2c94a0"] 
 
-    fig, axs = plt.subplots(3, 2, figsize=(16, 14), sharex=True, sharey=True)
-    fig.suptitle(r"Amplitud de oscilacion de $\theta(t)$° con ajuste lineal", fontsize=19)
+    slopes = []
+
+    # --- Largos mayores ---
+    fig1, axs1 = plt.subplots(3, 1, figsize=(8, 14), sharex=True)
+    fig1.suptitle(r"Amplitud de oscilación de $\theta(t)$° con ajuste lineal - $L \approx 32.8$cm", fontsize=17)
 
     for i, m in enumerate(masas):
         dfs_masa = [df for df in DF if df.m == m]
-
-        # Separar por largo
         dfs_larga = [df for df in dfs_masa if df['r'].iloc[0] >= 30]
-        dfs_corta = [df for df in dfs_masa if df['r'].iloc[0] < 30]
+        ax = axs1[i]
+        for k, df in enumerate(dfs_larga):
+            t = df['t'].values
+            theta = df['θ'].values
 
-        colores = ["#0C1CAB", "#750567", "#2c94a0"] 
-        
-        for j, dfs_largo in enumerate([dfs_larga, dfs_corta]):
-            ax = axs[i, j]
+            # Encontrar máximos
+            peaks, _ = find_peaks(theta)
+            t_peaks = t[peaks]
+            theta_peaks = theta[peaks]
 
-            for k, df in enumerate(dfs_largo):
-                t = df['t'].values
-                theta = df['θ'].values
-
-                # Encontrar máximos
-                peaks, _ = find_peaks(theta)
-                t_peaks = t[peaks]
-                theta_peaks = theta[peaks]
-
-                # Color y estilo para esta curva
-                color = colores[k % len(colores)]
+            color = colores[k % len(colores)]
+            # Curva original
+            ax.plot(t, theta, '-', color=color, label=rf'$\theta_0 \approx$ {max(theta):.1f}°')
+            # Máximos
+            ax.plot(t_peaks, theta_peaks, color=color, marker="o", markersize=8, linestyle='None',
+                    label=rf'Máximos $\theta_0 \approx$ {max(theta):.1f}°')
+            # Ajuste lineal
+            if len(t_peaks) > 1:
+                slope, intercept, _, _, _ = linregress(t_peaks, theta_peaks)
                 
-                # Plot curva original sin marker, solo línea
-                ax.plot(t, theta, '-', color=color, label=rf'$\theta_0 \approx$ {max(theta):.1f}°')
+                if max(theta) <= 20: slopes.append(slope)
 
-                # Plot máximos como puntos X (sin marker en curva, solo aquí)
-                ax.plot(t_peaks, theta_peaks, color=color, marker="o", markersize=8, linestyle='None',
-                        label=rf'Máximos $\theta_0 \approx$ {max(theta):.1f}°')
+                t_fit = np.linspace(t_peaks.min(), t_peaks.max(), 100)
+                theta_fit = slope * t_fit + intercept
+                ax.plot(t_fit, theta_fit, linestyle='--', color=color,
+                        label=rf'Ajuste max $\theta_0 \approx${max(theta):.1f}°')
+        ax.set_title(rf'$m$ = {m} g, Long. Mayor')
+        ax.grid(True)
+        ax.set_ylabel(r'Ángulo $\theta$ [°]')
+        if i == 2:
+            ax.set_xlabel(r'Tiempo [$s$]')
+        ax.legend(fontsize=7)
 
-                # Ajuste lineal a los máximos
-                if len(t_peaks) > 1:
-                    slope, intercept, _, _, _ = linregress(t_peaks, theta_peaks)
-                    t_fit = np.linspace(t_peaks.min(), t_peaks.max(), 100)
-                    theta_fit = slope * t_fit + intercept
-                    ax.plot(t_fit, theta_fit, linestyle='--', color=color,
-                            label=rf'Ajuste max $\theta_0 \approx${max(theta):.1f}°')
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig("../Graphs/MaximosConFitLargos.png", bbox_inches='tight')
 
-            ax.set_title(rf'$m$ = {m} g, {largos_labels[j]}')
-            ax.grid(True)
-            if j == 0:
-                ax.set_ylabel(r'Ángulo $\theta$ [°]')
-            if i == 2:
-                ax.set_xlabel(r'Tiempo [$s$]')
-            ax.legend(fontsize=7)
+    # --- Largos menores ---
+    fig2, axs2 = plt.subplots(3, 1, figsize=(8, 14), sharex=True)
+    fig2.suptitle(r"Amplitud de oscilación de $\theta(t)$° con ajuste lineal - $L \approx 21.2$cm", fontsize=17)
 
-    plt.tight_layout()
-    plt.savefig("../Graphs/MaximosConFit.png")
+    for i, m in enumerate(masas):
+        dfs_masa = [df for df in DF if df.m == m]
+        dfs_corta = [df for df in dfs_masa if df['r'].iloc[0] < 30]
+        ax = axs2[i]
+        for k, df in enumerate(dfs_corta):
+            t = df['t'].values
+            theta = df['θ'].values
+
+            # Encontrar máximos
+            peaks, _ = find_peaks(theta)
+            t_peaks = t[peaks]
+            theta_peaks = theta[peaks]
+
+            color = colores[k % len(colores)]
+            # Curva original
+            ax.plot(t, theta, '-', color=color, label=rf'$\theta_0 \approx$ {max(theta):.1f}°')
+            # Máximos
+            ax.plot(t_peaks, theta_peaks, color=color, marker="o", markersize=8, linestyle='None',
+                    label=rf'Máximos $\theta_0 \approx$ {max(theta):.1f}°')
+            # Ajuste lineal
+            if len(t_peaks) > 1:
+                slope, intercept, _, _, _ = linregress(t_peaks, theta_peaks)
+                
+                if max(theta) <= 20: slopes.append(slope)
+
+                t_fit = np.linspace(t_peaks.min(), t_peaks.max(), 100)
+                theta_fit = slope * t_fit + intercept
+                ax.plot(t_fit, theta_fit, linestyle='--', color=color,
+                        label=rf'Ajuste max $\theta_0 \approx${max(theta):.1f}°')
+        ax.set_title(rf'$m$ = {m} g, Long. Menor')
+        ax.grid(True)
+        ax.set_ylabel(r'Ángulo $\theta$ [°]')
+        if i == 2:
+            ax.set_xlabel(r'Tiempo [$s$]')
+        ax.legend(fontsize=7)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig("../Graphs/MaximosConFitCortos.png", bbox_inches='tight')
+    print(round(np.mean(slopes), 2))

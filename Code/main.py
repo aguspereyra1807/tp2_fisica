@@ -1,4 +1,5 @@
-from graphs import angleVsAngular, differentLenght, trajectoriesGrid, gridMaxLinealRegression, angularVsMassLarge
+from graphs import angleVsAngular, angularVsL, trajectoriesGrid, gridMaxLinealRegression, angularVsMassLarge, angularVsM
 
 if __name__ == '__main__':
-    trajectoriesGrid()
+    angularVsM()
+    angularVsL()
