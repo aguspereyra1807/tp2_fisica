@@ -97,8 +97,8 @@ def estimateGravity():
     samples = []
     for df in DF:
         r = np.mean(df['r']) / 100 # cm -> m
-        samples.append( (4 * r * np.pi ** 2) / (df.period ** 2) )
+        samples.append( (4 * (r-0.058) * np.pi ** 2) / (df.period ** 2) ) # Arreglo en la diferencia de r (5.8cm)
     return round(np.mean(samples), 2), samples
 
 if __name__ == '__main__':
-    pass
+    print(estimateGravity()[0])
