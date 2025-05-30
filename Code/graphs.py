@@ -359,8 +359,8 @@ def oscilationComparative(dfIndex: int):
 
     plt.figure(figsize=(12,8))
 
-    plt.plot(x, y1, '-', label=rf'Trayectoria Péndulo Físico', color="#0380fc")
     plt.plot(x, y2, '--', label=rf'Trayectoria Péndulo Teórico', color="#ff066a")
+    plt.plot(x, y1, '-', label=rf'Trayectoria Péndulo Físico', color="#0380fc", linewidth=3, alpha=0.6)
     
     plt.grid()
     plt.xlabel('Tiempo [s]')
@@ -370,4 +370,4 @@ def oscilationComparative(dfIndex: int):
     
     plt.legend(fontsize=14, loc='upper right')
     plt.tight_layout()
-    plt.savefig(f'../Graphs/comparativaPequeñasOsc(df[{dfIndex}]).png')
+    plt.savefig(f'../Graphs/comparativeOsc(df[{dfIndex}]).png')
