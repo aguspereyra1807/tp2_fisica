@@ -5,6 +5,7 @@ from calcs import DF, DF2, angularFreq, oscilationFreq, radius
 from scipy.signal import find_peaks
 from scipy.stats import linregress
 from scipy.interpolate import make_interp_spline
+from scipy import constants
 from collections import defaultdict
 import matplotlib.cm as cm
 
@@ -15,7 +16,7 @@ m2 = [df for df in DF if df.m == 22.15]
 m3 = [df for df in DF if df.m == 72.36]
 dfM = [m1,m2,m3]
 
-#### [1] ω vs θ inicial con propagación de errores
+#### [1] (NO USADO) ω vs θ inicial con propagación de errores
 ##### ω en función de θ inicial
 
 def angleVsAngular():
@@ -87,7 +88,7 @@ def angularVsL():
     plt.title(r'$\omega$ vs $L$ con ajuste polinómico')
     plt.grid(True)
     plt.legend(fontsize=15, loc='upper right')
-    plt.savefig("../Graphs/wVsL2.png", bbox_inches='tight')
+    plt.savefig("../Graphs/wVsL.png", bbox_inches='tight')
 
 ##### [3] Variación de ω con masas 
 ##### L, θ constantes: m1, m2, m3 
@@ -130,7 +131,7 @@ def angularVsM():
     plt.savefig("../Graphs/wVsM.png", bbox_inches='tight')
 
 
-##### [3] Todas las trayectorias
+##### [4] Todas las trayectorias
 ##### θ(t)
 
 def trajectoriesGrid():
@@ -161,7 +162,7 @@ def trajectoriesGrid():
         ax.set_ylabel(r"$\theta(t)$ [$°$]")
         if i == 2:
             ax.set_xlabel(r"Tiempo [$s$]")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=12)
 
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig("../Graphs/TrajectoriesGridLargos.png", bbox_inches='tight')
@@ -185,13 +186,13 @@ def trajectoriesGrid():
         ax.set_ylabel(r"$\theta(t)$ [$°$]")
         if i == 2:
             ax.set_xlabel(r"Tiempo [$s$]")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=12)
 
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig("../Graphs/TrajectoriesGridCortos.png", bbox_inches='tight')
 
 
-###### [3] ω 
+###### (NO USADO) [5] ω en función de L y M 
 ###### L vs ω y m vs ω
 
 def angularVsMassLarge():
@@ -218,7 +219,7 @@ def angularVsMassLarge():
     plt.tight_layout()
     plt.savefig("../Graphs/OmegaVsMasaYLongitud.png")
 
-###### [4] Máximos y ajuste lineal
+###### [6] Máximos con ajuste lineal
 ###### θ(t)
 
 def gridMaxLinealRegression():
@@ -265,7 +266,7 @@ def gridMaxLinealRegression():
         ax.set_ylabel(r'Ángulo $\theta$ [°]')
         if i == 2:
             ax.set_xlabel(r'Tiempo [$s$]')
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=12)
 
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig("../Graphs/MaximosConFitLargos.png", bbox_inches='tight')
@@ -308,8 +309,65 @@ def gridMaxLinealRegression():
         ax.set_ylabel(r'Ángulo $\theta$ [°]')
         if i == 2:
             ax.set_xlabel(r'Tiempo [$s$]')
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=12)
 
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig("../Graphs/MaximosConFitCortos.png", bbox_inches='tight')
-    print(round(np.mean(slopes), 2))
+    print(fr"La pendiente (promedio) del ajuste lineal para pequeñas oscilaciones ($\theta_0 \approx 10º$) es $a = {round(np.mean(slopes), 2)}$")
+
+###### [7] (TERMINAR, DA CUALQ COSA) T vs L
+
+def perdiodVsL():
+    periods = [df.period for df in DF]
+    periodErr = [df.periodError for df in DF]
+    lengths = [radius(df)/100 for df in DF] 
+    lengthsErr = [0.1/100 for _ in range(len(lengths))]
+
+    plt.figure(figsize=(12,8))
+    plt.errorbar(x=periods, y=lengths, xerr=periodErr, yerr=lengthsErr, fmt='o', markersize=10, color='grey', markeredgecolor='black', ecolor="#000000", elinewidth=1, capsize=4, barsabove=False)
+
+    coef = np.polyfit(periods, lengths, 1)
+    a, b = coef
+    T_fit = np.linspace(min(periods), max(periods), 100)
+    L_fit = a * T_fit + b
+    plt.plot(T_fit, L_fit, 'r--', label=fr'Ajuste lineal: $L = {a:.2f}T + {b:.2f}$')
+
+    plt.title(r'$T$ vs $L$')
+    plt.grid()
+    plt.xlabel(r'Período de oscilación $T$ [s]')
+    plt.ylabel(r'Longitud del péndulo $L$ [m]')
+    plt.tight_layout()
+
+    print(a)
+
+    plt.show()
+
+###### [8] θ(t) θ chico vs θ(t) teórico
+
+def oscilationComparative(dfIndex: int):
+    ''' Teórico -> θ(t) = θ_0 cos ( sqrt(g/l) * t)'''
+    df = DF[dfIndex] # m3, L1
+    x = df['t']
+    l = round(np.mean(df['r']), 2)
+
+    y1 = [np.deg2rad(theta)+0.025 for theta in df['θ']] # + correción del ángulo
+    theta0rad = max(y1)
+    theta0deg = np.rad2deg(theta0rad)
+    
+    y2 = theta0rad* np.cos( np.sqrt( constants.g / ((l-5.8)/100) ) * x) # l a metros y ajuste del error 
+    # y2 = theta0rad* np.cos( df.w * x) # l a metros y ajuste del error 
+
+    plt.figure(figsize=(12,8))
+
+    plt.plot(x, y1, '-', label=rf'Trayectoria Péndulo Físico', color="#0380fc")
+    plt.plot(x, y2, '--', label=rf'Trayectoria Péndulo Teórico', color="#ff066a")
+    
+    plt.grid()
+    plt.xlabel('Tiempo [s]')
+    plt.ylabel(r'$\theta(t)$ [rad]')
+
+    plt.title(rf"$\theta(t)$ Teórico (Armónico) vs $\theta(t)$ Real ($\theta_0 \approx {round(theta0rad, 2)}$rad, $m \approx {df.m}g, L \approx {round(l-5.8, 2)}cm$)", fontsize=16)
+    
+    plt.legend(fontsize=14, loc='upper right')
+    plt.tight_layout()
+    plt.savefig(f'../Graphs/comparativaPequeñasOsc(df[{dfIndex}]).png')
